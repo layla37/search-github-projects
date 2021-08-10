@@ -1,0 +1,56 @@
+* {
+  box-sizing: border-box;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.container {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+}
+
+button {
+  width: 150px;
+  display: inline;
+  margin: 20px;
+  padding: 5px;
+}
+
+.error-message {
+  color: red;
+  font-size: 20px;
+  margin-bottom: 30px;
+}
+
+.results {
+  max-width: 600px;
+}
+
+.search-box > div {
+  margin-top: 20px;
+}
+
+ul {
+  list-style-type: none;
+}
+
+li {
+  margin: 20px;
+}
+
+a:link {
+  color: #3287c9;
+  text-decoration: none;
+  font-size: 20px;
+}
+
+a:hover {
+  color: rgb(121, 201, 247);
+  text-decoration: none;
+}
+
+input,
+select {
+  margin-left: 10px;
+}
