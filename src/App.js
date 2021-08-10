@@ -1,4 +1,6 @@
 import { render } from 'react-dom';
+import { Provider } from "react-redux";
+import store from "./store";
 import SearchRepos from './SearchRepos';
 
 const App = () => {
@@ -7,4 +9,4 @@ const App = () => {
   );
 };
 
-render(<App />, document.getElementById('root'));
+render(<Provider store={store}><App /></Provider>, document.getElementById('root'));

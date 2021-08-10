@@ -1,14 +1,20 @@
 import { useState } from 'react';
+import { useSelector, useDispatch } from "react-redux";
+import changeProjectName from './actionCreators/changeProjectName';
+import changeProgrammingLanguage from './actionCreators/changeProgrammingLanguage';
+import changeResults from './actionCreators/changeResults';
 
 const ENDPOINT = 'https://api.github.com/search/repositories';
 const PROGRAMMING_LANGUAGES = ['C', 'C++', 'C#', 'Go', 'Java', 'JavaScript', 'PHP', 'Python', 'Ruby', 'Scala', 'TypeScript'];
 
 const SearchRepos = () => {
-  const [searchText, setSearchText] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [programmingLanguage, setProgrammingLanguage] = useState('');
-  const [results, setResults] = useState([]);
   const [errorMessage, setErrorMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const dispatch = useDispatch();
+  const projectName = useSelector((state) => state.projectName);
+  const programmingLanguage = useSelector((state) => state.programmingLanguage);
+  const results = useSelector((state) => state.results);
+  
 
   const formatAndSetResults = (data) => {
     const { items } = data;
@@ -28,7 +34,7 @@ const SearchRepos = () => {
       };
     });
 
-    setResults(projectsArray);
+    dispatch(changeResults(projectsArray));
   };
 
   const handleSearch = async (e) => {
@@ -39,17 +45,17 @@ const SearchRepos = () => {
     }
 
     if (results) {
-      setResults([]);
+      dispatch(changeResults([]));
     }
 
-    if (!searchText || !programmingLanguage) {
+    if (!projectName || !programmingLanguage) {
       return setErrorMessage('You must choose a project name AND a programming language');
     }
 
     setIsLoading(true);
 
     try {
-      const searchTerm = encodeURIComponent(searchText);
+      const searchTerm = encodeURIComponent(projectName);
       const queryString = `?q=${searchTerm}+language:${programmingLanguage}&sort=stars&order=desc`;
       const response = await fetch(`${ENDPOINT}${queryString}`);
       const data = await response.json();
@@ -62,9 +68,9 @@ const SearchRepos = () => {
   };
 
   const handleClear = () => {
-    setResults([]);
-    setProgrammingLanguage('');
-    setSearchText('');
+    dispatch(changeResults([]));
+    dispatch(changeProgrammingLanguage(''));
+    dispatch(changeProjectName(''));
 
   };
 
@@ -76,7 +82,7 @@ const SearchRepos = () => {
           {errorMessage && <div className='error-message'>{errorMessage}</div>}
           <label>
             Project name:
-            <input type='text' value={searchText} onChange={(e) => setSearchText(e.target.value.toLowerCase())} />
+            <input type='text' value={projectName} onChange={(e) => dispatch(changeProjectName(e.target.value))} />
           </label>
         </div>
         <div>
@@ -84,8 +90,8 @@ const SearchRepos = () => {
             Choose programming language:
             <select 
               value={programmingLanguage} 
-              onChange={(e) => setProgrammingLanguage(e.target.value)}
-              onBlur={(e) => setProgrammingLanguage(e.target.value)}
+              onChange={(e) => dispatch(changeProgrammingLanguage(e.target.value))}
+              onBlur={(e) => dispatch(changeProgrammingLanguage(e.target.value))}
             >
               <option />
               {
