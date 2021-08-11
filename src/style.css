@@ -10,6 +10,10 @@
   align-items: center;
 }
 
+.buttons {
+  display: flex;
+}
+
 button {
   width: 150px;
   display: inline;
@@ -53,4 +57,18 @@ a:hover {
 input,
 select {
   margin-left: 10px;
+}
+
+@media only screen and (max-width: 460px) {
+  .search-box {
+    padding: 10px;
+  }
+
+  .results {
+    max-width: 98%;
+  }
+
+  li {
+    margin-left: 5px;
+  }
 }
