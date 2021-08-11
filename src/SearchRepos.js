@@ -2,76 +2,45 @@ import { useState } from 'react';
 import { useSelector, useDispatch } from "react-redux";
 import changeProjectName from './actionCreators/changeProjectName';
 import changeProgrammingLanguage from './actionCreators/changeProgrammingLanguage';
-import changeResults from './actionCreators/changeResults';
+import updateResults from './actionCreators/updateResults';
 
-const ENDPOINT = 'https://api.github.com/search/repositories';
 const PROGRAMMING_LANGUAGES = ['C', 'C++', 'C#', 'Go', 'Java', 'JavaScript', 'PHP', 'Python', 'Ruby', 'Scala', 'TypeScript'];
 
 const SearchRepos = () => {
-  const [errorMessage, setErrorMessage] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [validationErrorMessage, setValidationErrorMessage] = useState('');
+  const isLoading = useSelector((state) => state.isLoading);
   const dispatch = useDispatch();
   const projectName = useSelector((state) => state.projectName);
   const programmingLanguage = useSelector((state) => state.programmingLanguage);
   const results = useSelector((state) => state.results);
-  
 
-  const formatAndSetResults = (data) => {
-    const { items } = data;
-
-    if (!items) return;
-
-    const projectsArray = items.map(item => {
-      let description = item.description;
-      if (description && description.length > 150) {
-        description = `${description.slice(0, 150)}...`;
-      }
-      return {
-        name: item.full_name,
-        description: description,
-        id: item.id,
-        url: item.html_url
-      };
-    });
-
-    dispatch(changeResults(projectsArray));
-  };
-
-  const handleSearch = async (e) => {
+  const handleSearch = (e) => {
     e.preventDefault();
 
-    if (errorMessage) {
-      setErrorMessage('');
+    if (validationErrorMessage) {
+      setValidationErrorMessage('');
     }
 
     if (results) {
-      dispatch(changeResults([]));
+      dispatch(updateResults([]));
     }
 
     if (!projectName || !programmingLanguage) {
-      return setErrorMessage('You must choose a project name AND a programming language');
+      return setValidationErrorMessage('You must choose a project name AND a programming language');
     }
 
-    setIsLoading(true);
-
-    try {
-      const searchTerm = encodeURIComponent(projectName);
-      const queryString = `?q=${searchTerm}+language:${programmingLanguage}&sort=stars&order=desc`;
-      const response = await fetch(`${ENDPOINT}${queryString}`);
-      const data = await response.json();
-      formatAndSetResults(data);
-      setIsLoading(false);
-    } catch(error) {
-      console.error('error when searching GitHUb for projects: ', error);
-    }
+    dispatch({ type: "IS_LOADING", payload: true });
     
+    const searchTerm = encodeURIComponent(projectName);
+    const queryString = `?q=${searchTerm}+language:${programmingLanguage}&sort=stars&order=desc`;
+
+    dispatch({type: 'PROJECT_FETCH_REQUESTED', payload: {queryString}})
   };
 
   const handleClear = () => {
-    dispatch(changeResults([]));
+    dispatch(updateResults([]));
     dispatch(changeProgrammingLanguage(''));
     dispatch(changeProjectName(''));
-
   };
 
   return (
@@ -79,7 +48,7 @@ const SearchRepos = () => {
       <div className='search-box'>
         <div>
           <h2>Search for projects on GitHub</h2>
-          {errorMessage && <div className='error-message'>{errorMessage}</div>}
+          {validationErrorMessage && <div className='error-message'>{validationErrorMessage}</div>}
           <label>
             Project name:
             <input type='text' value={projectName} onChange={(e) => dispatch(changeProjectName(e.target.value))} />
