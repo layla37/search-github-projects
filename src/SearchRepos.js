@@ -76,7 +76,7 @@ const SearchRepos = () => {
           {validationErrorMessage && <div className='error-message'>{validationErrorMessage}</div>}
           <label>
             Project name:
-            <input type='text' value={searchText} onChange={(e) => setSearchText(e.target.value.toLowerCase())} />
+            <input type='text' value={searchText} onChange={(e) => setSearchText(e.target.value)} />
           </label>
         </div>
         <div>
