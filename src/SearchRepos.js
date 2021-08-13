@@ -1,20 +1,37 @@
 import { useState } from 'react';
-import { useSelector, useDispatch } from "react-redux";
-import changeProjectName from './actionCreators/changeProjectName';
-import changeProgrammingLanguage from './actionCreators/changeProgrammingLanguage';
-import updateResults from './actionCreators/updateResults';
 
+const ENDPOINT = 'https://api.github.com/search/repositories';
 const PROGRAMMING_LANGUAGES = ['C', 'C++', 'C#', 'Go', 'Java', 'JavaScript', 'PHP', 'Python', 'Ruby', 'Scala', 'TypeScript'];
 
 const SearchRepos = () => {
+  const [searchText, setSearchText] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [programmingLanguage, setProgrammingLanguage] = useState('');
+  const [results, setResults] = useState([]);
   const [validationErrorMessage, setValidationErrorMessage] = useState('');
-  const isLoading = useSelector((state) => state.isLoading);
-  const dispatch = useDispatch();
-  const projectName = useSelector((state) => state.projectName);
-  const programmingLanguage = useSelector((state) => state.programmingLanguage);
-  const results = useSelector((state) => state.results);
 
-  const handleSearch = (e) => {
+  const formatAndSetResults = (data) => {
+    const { items } = data;
+
+    if (!items) return;
+
+    const projectsArray = items.map(item => {
+      let description = item.description;
+      if (description && description.length > 150) {
+        description = `${description.slice(0, 150)}...`;
+      }
+      return {
+        name: item.full_name,
+        description: description,
+        id: item.id,
+        url: item.html_url
+      };
+    });
+
+    setResults(projectsArray);
+  };
+
+  const handleSearch = async (e) => {
     e.preventDefault();
 
     if (validationErrorMessage) {
@@ -22,25 +39,33 @@ const SearchRepos = () => {
     }
 
     if (results) {
-      dispatch(updateResults([]));
+      setResults([]);
     }
 
-    if (!projectName || !programmingLanguage) {
+    if (!searchText || !programmingLanguage) {
       return setValidationErrorMessage('You must choose a project name AND a programming language');
     }
 
-    dispatch({ type: "IS_LOADING", payload: true });
-    
-    const searchTerm = encodeURIComponent(projectName);
-    const queryString = `?q=${searchTerm}+language:${programmingLanguage}&sort=stars&order=desc`;
+    setIsLoading(true);
 
-    dispatch({type: 'PROJECT_FETCH_REQUESTED', payload: {queryString}})
+    try {
+      const searchTerm = encodeURIComponent(searchText);
+      const queryString = `?q=${searchTerm}+language:${programmingLanguage}&sort=stars&order=desc`;
+      const response = await fetch(`${ENDPOINT}${queryString}`);
+      const data = await response.json();
+      formatAndSetResults(data);
+      setIsLoading(false);
+    } catch(error) {
+      console.error('error when searching GitHUb for projects: ', error);
+    }
+    
   };
 
   const handleClear = () => {
-    dispatch(updateResults([]));
-    dispatch(changeProgrammingLanguage(''));
-    dispatch(changeProjectName(''));
+    setResults([]);
+    setProgrammingLanguage('');
+    setSearchText('');
+
   };
 
   return (
@@ -51,7 +76,7 @@ const SearchRepos = () => {
           {validationErrorMessage && <div className='error-message'>{validationErrorMessage}</div>}
           <label>
             Project name:
-            <input type='text' value={projectName} onChange={(e) => dispatch(changeProjectName(e.target.value))} />
+            <input type='text' value={searchText} onChange={(e) => setSearchText(e.target.value.toLowerCase())} />
           </label>
         </div>
         <div>
@@ -59,8 +84,8 @@ const SearchRepos = () => {
             Choose programming language:
             <select 
               value={programmingLanguage} 
-              onChange={(e) => dispatch(changeProgrammingLanguage(e.target.value))}
-              onBlur={(e) => dispatch(changeProgrammingLanguage(e.target.value))}
+              onChange={(e) => setProgrammingLanguage(e.target.value)}
+              onBlur={(e) => setProgrammingLanguage(e.target.value)}
             >
               <option />
               {
